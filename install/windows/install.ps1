@@ -73,7 +73,8 @@ if (Test-Path $oldShortcutPath) {
 Remove-ItemProperty -Path $registryPath -Name $registryName -ErrorAction SilentlyContinue
 
 # Create registry entry for auto-start
-$registryValue = "`"$binPath`" daemon"
+# Use cmd /c start to launch without a visible console window
+$registryValue = "cmd /c start /min `"`" `"$binPath`" daemon"
 Set-ItemProperty -Path $registryPath -Name $registryName -Value $registryValue
 
 Write-Host "Created startup registry entry"
