@@ -28,8 +28,8 @@ Write-Info "Testing: Windows PowerShell installation"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoDir = Split-Path -Parent (Split-Path -Parent $ScriptDir)
 $TestDir = Join-Path $env:TEMP "autotidy-test-$(Get-Random)"
-$StartupDir = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
-$ShortcutPath = "$StartupDir\autotidy.lnk"
+$RegistryPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
+$RegistryName = "autotidy"
 
 Write-Info "Repository: $RepoDir"
 Write-Info "Test directory: $TestDir"
@@ -87,11 +87,12 @@ Write-Info "Running install script..."
 $InstallScript = Join-Path $RepoDir "install\windows\install.ps1"
 & $InstallScript -BinaryPath $BinaryPath
 
-# Check startup shortcut was created
-if (-not (Test-Path $ShortcutPath)) {
-    Write-ErrorMessage "Startup shortcut was not created at $ShortcutPath"
+# Check startup registry entry was created
+$RegistryValue = Get-ItemProperty -Path $RegistryPath -Name $RegistryName -ErrorAction SilentlyContinue
+if (-not $RegistryValue) {
+    Write-ErrorMessage "Startup registry entry was not created"
 }
-Write-Info "Startup shortcut created successfully"
+Write-Info "Startup registry entry created successfully"
 
 # Check binary was installed
 $InstalledBinary = "$env:LOCALAPPDATA\autotidy\autotidy.exe"
@@ -152,8 +153,9 @@ $UninstallScript = Join-Path $RepoDir "install\windows\uninstall.ps1"
 & $UninstallScript
 
 # Verify uninstall
-if (Test-Path $ShortcutPath) {
-    Write-ErrorMessage "Startup shortcut was not removed"
+$RegistryValue = Get-ItemProperty -Path $RegistryPath -Name $RegistryName -ErrorAction SilentlyContinue
+if ($RegistryValue) {
+    Write-ErrorMessage "Startup registry entry was not removed"
 }
 if (Test-Path $InstalledBinary) {
     Write-ErrorMessage "Binary was not removed"

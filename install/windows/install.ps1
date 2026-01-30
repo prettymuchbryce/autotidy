@@ -13,8 +13,8 @@ $ErrorActionPreference = "Stop"
 $repo = "prettymuchbryce/autotidy"
 $installDir = "$env:LOCALAPPDATA\autotidy"
 $binPath = "$installDir\autotidy.exe"
-$startupDir = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
-$shortcutPath = "$startupDir\autotidy.lnk"
+$registryPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
+$registryName = "autotidy"
 
 Write-Host "Installing autotidy..." -ForegroundColor Green
 
@@ -62,21 +62,21 @@ if ($BinaryPath -ne "") {
 # Stop any running autotidy process
 Get-Process -Name "autotidy" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
 
-# Remove existing startup shortcut if present
-if (Test-Path $shortcutPath) {
-    Remove-Item $shortcutPath -Force
+# Clean up old startup shortcut if present (from previous install method)
+$oldShortcutPath = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\autotidy.lnk"
+if (Test-Path $oldShortcutPath) {
+    Remove-Item $oldShortcutPath -Force
+    Write-Host "Removed old startup shortcut"
 }
 
-# Create startup shortcut
-$WshShell = New-Object -ComObject WScript.Shell
-$shortcut = $WshShell.CreateShortcut($shortcutPath)
-$shortcut.TargetPath = $binPath
-$shortcut.Arguments = "daemon"
-$shortcut.WorkingDirectory = $installDir
-$shortcut.WindowStyle = 7  # Minimized
-$shortcut.Save()
+# Remove existing registry entry if present, then create new one
+Remove-ItemProperty -Path $registryPath -Name $registryName -ErrorAction SilentlyContinue
 
-Write-Host "Created startup shortcut"
+# Create registry entry for auto-start
+$registryValue = "`"$binPath`" daemon"
+Set-ItemProperty -Path $registryPath -Name $registryName -Value $registryValue
+
+Write-Host "Created startup registry entry"
 
 # Start the daemon now
 Write-Host "Starting autotidy daemon..."
@@ -89,3 +89,4 @@ Write-Host "autotidy $version is now running."
 Write-Host ""
 Write-Host "To check status:  & `"$binPath`" status"
 Write-Host "To view config:   notepad $env:APPDATA\autotidy\config.yaml"
+
