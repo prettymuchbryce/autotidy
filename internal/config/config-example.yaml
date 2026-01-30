@@ -1,0 +1,70 @@
+# autotidy configuration
+# https://github.com/prettymuchbryce/autotidy
+# Documentation: https://prettymuchbryce.github.io/autotidy/
+#
+# This is an example configuration file. Uncomment and modify the rules
+# below to match your needs, or create your own rules.
+
+# rules:
+#  # Example: Organize downloads by file type
+#   - name: Organize Downloads
+#     locations: ~/Downloads
+#     filters:
+#       - extension: [pdf, doc, docx]
+#     actions:
+#       - move: ~/Documents/Downloads
+#
+#  # Example: Sort images by date taken
+#   - name: Sort Photos
+#     locations: ~/Downloads
+#     recursive: true
+#     filters:
+#       - extension: [jpg, jpeg, png, heic]
+#     actions:
+#       - move: ~/Pictures/%Y/%B  # e.g., ~/Pictures/2024/January
+#
+#  # Example: Archive old documents (AND logic - both filters must match)
+#   - name: Archive Old Docs
+#     locations: ~/Documents
+#     filters:
+#       - extension: [pdf, doc, docx]
+#       - date_modified:
+#           before:
+#             days_ago: 90
+#     actions:
+#       - move: ~/Archive/Documents
+#
+#  # Example: Clean temporary files
+#   - name: Clean Temp Files
+#     locations: ~/Downloads
+#     filters:
+#       - extension: [tmp, temp, bak]
+#     actions:
+#       - trash
+#
+#  # Example: Move images or videos (OR logic with any:)
+#   - name: Organize Media
+#     locations: ~/Downloads
+#     filters:
+#       - any:
+#           - mime_type: "image/*"
+#           - mime_type: "video/*"
+#     actions:
+#       - move: ~/Media
+#
+#  # Example: Move files except backups (NOT logic)
+#   - name: Move Non-Backups
+#     locations: ~/Downloads
+#     filters:
+#       - not:
+#           - extension: [bak, backup]
+#     actions:
+#       - move: ~/Processed
+
+# Daemon configuration (optional)
+# daemon:
+#   debounce: 500ms  # Wait for activity to settle (default: 500ms)
+
+# Logging configuration (optional)
+# logging:
+#   level: warn  # debug, info, warn, error (default: warn)

@@ -1,0 +1,199 @@
+name: Installation Tests
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
+      - 'flake.nix'
+      - 'flake.lock'
+      - 'gomod2nix.toml'
+      - 'nfpm.yaml'
+      - 'Makefile'
+      - 'install/**'
+      - 'tests/install/**'
+      - '.github/workflows/install-tests.yml'
+  pull_request:
+    paths:
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
+      - 'flake.nix'
+      - 'flake.lock'
+      - 'gomod2nix.toml'
+      - 'nfpm.yaml'
+      - 'Makefile'
+      - 'install/**'
+      - 'tests/install/**'
+      - '.github/workflows/install-tests.yml'
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  test-linux-source:
+    name: Linux - Source Build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        method: [source, source-systemd]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+      - name: Run test
+        run: |
+          chmod +x tests/install/test_${{ matrix.method }}.sh
+          tests/install/test_${{ matrix.method }}.sh
+
+  test-linux-install-script:
+    name: Linux - Install Script
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+      - name: Install test shells
+        run: sudo apt-get update && sudo apt-get install -y zsh fish
+      - name: Run test
+        run: |
+          chmod +x tests/install/test_install-script.sh
+          tests/install/test_install-script.sh
+
+  test-linux-packages:
+    name: Linux - ${{ matrix.method }} Package
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        method: [deb]
+        # Note: rpm test requires rpm tools, which aren't on ubuntu-latest by default
+        # Add rpm to matrix after installing rpm tools
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+      - name: Install nfpm
+        run: go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+      - name: Run test
+        run: |
+          chmod +x tests/install/test_${{ matrix.method }}.sh
+          tests/install/test_${{ matrix.method }}.sh
+
+  test-linux-nix:
+    name: Linux - ${{ matrix.method }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        method: [nix-package, nixos-module, home-manager]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/nix
+          key: nix-flake-cache-linux-${{ matrix.method }}-${{ hashFiles('flake.lock') }}
+          restore-keys: |
+            nix-flake-cache-linux-${{ matrix.method }}-
+            nix-flake-cache-linux-
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Run test
+        run: |
+          chmod +x tests/install/test_${{ matrix.method }}.sh
+          tests/install/test_${{ matrix.method }}.sh
+
+  test-macos-source:
+    name: macOS - Source Build
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        method: [source, source-launchd]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+      - name: Run test
+        run: |
+          chmod +x tests/install/test_${{ matrix.method }}.sh
+          tests/install/test_${{ matrix.method }}.sh
+
+  test-macos-nix:
+    name: macOS - ${{ matrix.method }}
+    runs-on: macos-latest
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        method: [nix-package, darwin-module, home-manager]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/nix
+          key: nix-flake-cache-macos-${{ matrix.method }}-${{ hashFiles('flake.lock') }}
+          restore-keys: |
+            nix-flake-cache-macos-${{ matrix.method }}-
+            nix-flake-cache-macos-
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - name: Run test
+        run: |
+          chmod +x tests/install/test_${{ matrix.method }}.sh
+          tests/install/test_${{ matrix.method }}.sh
+
+  test-windows:
+    name: Windows - PowerShell
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+      - name: Run test
+        shell: pwsh
+        run: tests/install/test_windows.ps1
+
+  # Summary job that requires all tests
+  test-summary:
+    name: All Installation Tests
+    needs:
+      - test-linux-source
+      - test-linux-install-script
+      - test-linux-packages
+      - test-linux-nix
+      - test-macos-source
+      - test-macos-nix
+      - test-windows
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check all tests passed
+        run: |
+          if [[ "${{ needs.test-linux-source.result }}" != "success" ]] || \
+             [[ "${{ needs.test-linux-install-script.result }}" != "success" ]] || \
+             [[ "${{ needs.test-linux-packages.result }}" != "success" ]] || \
+             [[ "${{ needs.test-linux-nix.result }}" != "success" ]] || \
+             [[ "${{ needs.test-macos-source.result }}" != "success" ]] || \
+             [[ "${{ needs.test-macos-nix.result }}" != "success" ]] || \
+             [[ "${{ needs.test-windows.result }}" != "success" ]]; then
+            echo "Some installation tests failed"
+            exit 1
+          fi
+          echo "All installation tests passed!"

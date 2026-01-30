@@ -1,0 +1,17 @@
+[Unit]
+Description=autotidy daemon
+After=network.target
+
+[Service]
+Type=notify
+ExecStart=/usr/local/bin/autotidy daemon
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=10
+
+# Security hardening
+PrivateTmp=yes
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=default.target

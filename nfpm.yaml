@@ -1,0 +1,45 @@
+# nfpm configuration for building deb/rpm packages
+# See https://nfpm.goreleaser.com/ for documentation
+#
+# Build packages with:
+#   nfpm pkg --packager deb --target autotidy.deb
+#   nfpm pkg --packager rpm --target autotidy.rpm
+#
+# Note: version is set dynamically by the release workflow via sed
+
+name: autotidy
+arch: ${GOARCH:-amd64}
+platform: linux
+version: 0.0.0
+maintainer: prettymuchbryce
+description: Automatically watch and organize files using configurable rules
+vendor: prettymuchbryce
+homepage: https://github.com/prettymuchbryce/autotidy
+license: MIT
+
+contents:
+  # Binary
+  - src: ./autotidy
+    dst: /usr/local/bin/autotidy
+    file_info:
+      mode: 0755
+
+  # Systemd user service file
+  - src: ./install/linux/autotidy.service
+    dst: /usr/lib/systemd/user/autotidy.service
+    file_info:
+      mode: 0644
+
+scripts:
+  postinstall: ./install/linux/postinstall.sh
+  preremove: ./install/linux/preremove.sh
+  postremove: ./install/linux/postremove.sh
+
+# Override settings per package type
+overrides:
+  deb:
+    depends:
+      - systemd
+  rpm:
+    depends:
+      - systemd

@@ -1,0 +1,90 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Build binaries
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          # macOS
+          GOOS=darwin GOARCH=arm64 go build -ldflags "-X main.version=$VERSION" -o autotidy .
+          tar -czvf autotidy_${VERSION#v}_darwin_arm64.tar.gz autotidy
+          rm autotidy
+
+          GOOS=darwin GOARCH=amd64 go build -ldflags "-X main.version=$VERSION" -o autotidy .
+          tar -czvf autotidy_${VERSION#v}_darwin_amd64.tar.gz autotidy
+          rm autotidy
+
+          # Linux
+          GOOS=linux GOARCH=amd64 go build -ldflags "-X main.version=$VERSION" -o autotidy .
+          tar -czvf autotidy_${VERSION#v}_linux_amd64.tar.gz autotidy
+          rm autotidy
+
+          GOOS=linux GOARCH=arm64 go build -ldflags "-X main.version=$VERSION" -o autotidy .
+          tar -czvf autotidy_${VERSION#v}_linux_arm64.tar.gz autotidy
+          rm autotidy
+
+          # Windows
+          GOOS=windows GOARCH=amd64 go build -ldflags "-X main.version=$VERSION" -o autotidy.exe .
+          zip autotidy_${VERSION#v}_windows_amd64.zip autotidy.exe
+          rm autotidy.exe
+
+      - name: Build Linux packages
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          # Install nfpm
+          go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+
+          # Build amd64 binary for packages
+          GOOS=linux GOARCH=amd64 go build -ldflags "-X main.version=$VERSION" -o autotidy .
+
+          # Update version in nfpm.yaml
+          sed -i "s/^version:.*/version: ${VERSION#v}/" nfpm.yaml
+
+          # Build packages
+          nfpm pkg --packager deb --target autotidy_${VERSION#v}_linux_amd64.deb
+          nfpm pkg --packager rpm --target autotidy_${VERSION#v}_linux_amd64.rpm
+
+          rm autotidy
+
+      - name: Generate checksums
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          sha256sum autotidy_${VERSION#v}_*.tar.gz autotidy_${VERSION#v}_*.zip autotidy_${VERSION#v}_*.deb autotidy_${VERSION#v}_*.rpm > checksums.txt
+          cat checksums.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            autotidy_*.tar.gz
+            autotidy_*.zip
+            autotidy_*.deb
+            autotidy_*.rpm
+            checksums.txt
+          generate_release_notes: true
