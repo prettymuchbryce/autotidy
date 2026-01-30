@@ -97,7 +97,7 @@ autotidy run         Perform a one-off run or dry run of rules
 Full documentation is available [here](https://prettymuchbryce.github.io/autotidy/).
 
 ### Quick links
-- [Getting Started](https://prettymuchbryce.github.io/autotidy/getting-started.html)
+- [Quick Start](https://prettymuchbryce.github.io/autotidy/quick-start.html)
 - [Configuration](https://prettymuchbryce.github.io/autotidy/configuration.html)
 - [Filters](https://prettymuchbryce.github.io/autotidy/filters/)
 - [Actions](https://prettymuchbryce.github.io/autotidy/actions/)
