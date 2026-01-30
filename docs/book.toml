@@ -1,0 +1,14 @@
+[book]
+title = "autotidy"
+authors = ["prettymuchbryce"]
+language = "en"
+description = "Automatically watch and organize files using configurable rules"
+
+[build]
+build-dir = "book"
+
+[output.html]
+git-repository-url = "https://github.com/prettymuchbryce/autotidy"
+edit-url-template = "https://github.com/prettymuchbryce/autotidy/edit/master/docs/{path}"
+no-section-label = true
+sidebar-header-nav = false
