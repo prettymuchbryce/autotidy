@@ -28,6 +28,8 @@ Write-Info "Testing: Windows PowerShell installation"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoDir = Split-Path -Parent (Split-Path -Parent $ScriptDir)
 $TestDir = Join-Path $env:TEMP "autotidy-test-$(Get-Random)"
+$StartupDir = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
+$ShortcutPath = "$StartupDir\autotidy.lnk"
 
 Write-Info "Repository: $RepoDir"
 Write-Info "Test directory: $TestDir"
@@ -85,22 +87,26 @@ Write-Info "Running install script..."
 $InstallScript = Join-Path $RepoDir "install\windows\install.ps1"
 & $InstallScript -BinaryPath $BinaryPath
 
-# Check scheduled task was created
-$Task = Get-ScheduledTask -TaskName "autotidy" -ErrorAction SilentlyContinue
-if (-not $Task) {
-    Write-ErrorMessage "Scheduled task was not created"
+# Check startup shortcut was created
+if (-not (Test-Path $ShortcutPath)) {
+    Write-ErrorMessage "Startup shortcut was not created at $ShortcutPath"
 }
-Write-Info "Scheduled task created successfully"
+Write-Info "Startup shortcut created successfully"
 
-# Stop the scheduled task daemon - we'll start our own with a custom config
-Write-Info "Stopping scheduled task daemon..."
-Stop-ScheduledTask -TaskName "autotidy" -ErrorAction SilentlyContinue
+# Check binary was installed
+$InstalledBinary = "$env:LOCALAPPDATA\autotidy\autotidy.exe"
+if (-not (Test-Path $InstalledBinary)) {
+    Write-ErrorMessage "Binary was not installed at $InstalledBinary"
+}
+Write-Info "Binary installed successfully"
+
+# Stop the daemon started by install script - we'll start our own with a custom config
+Write-Info "Stopping daemon..."
+Get-Process -Name "autotidy" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
 Start-Sleep -Seconds 1
 
-# For functional test, start daemon directly (not via scheduled task)
-# since scheduled task uses default config location
+# For functional test, start daemon with test config
 Write-Info "Starting daemon for functional test..."
-$InstalledBinary = "$env:LOCALAPPDATA\autotidy\autotidy.exe"
 $DaemonProcess = Start-Process -FilePath $InstalledBinary -ArgumentList "daemon", "--config", $ConfigPath -PassThru -WindowStyle Hidden
 
 Start-Sleep -Seconds 2
@@ -143,17 +149,16 @@ if (-not $DaemonProcess.HasExited) {
 
 # Uninstall
 $UninstallScript = Join-Path $RepoDir "install\windows\uninstall.ps1"
-if (Test-Path $UninstallScript) {
-    & $UninstallScript
+& $UninstallScript
+
+# Verify uninstall
+if (Test-Path $ShortcutPath) {
+    Write-ErrorMessage "Startup shortcut was not removed"
 }
-else {
-    # Manual cleanup
-    Unregister-ScheduledTask -TaskName "autotidy" -Confirm:$false -ErrorAction SilentlyContinue
-    $InstallDir = "$env:LOCALAPPDATA\autotidy"
-    if (Test-Path $InstallDir) {
-        Remove-Item -Recurse -Force $InstallDir
-    }
+if (Test-Path $InstalledBinary) {
+    Write-ErrorMessage "Binary was not removed"
 }
+Write-Info "Uninstall verified"
 
 # Clean test directory
 Remove-Item -Recurse -Force $TestDir -ErrorAction SilentlyContinue

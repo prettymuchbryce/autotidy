@@ -3,30 +3,29 @@
 
 $ErrorActionPreference = "Stop"
 
-$taskName = "autotidy"
 $installDir = "$env:LOCALAPPDATA\autotidy"
+$startupDir = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
+$shortcutPath = "$startupDir\autotidy.lnk"
 
 Write-Host "Uninstalling autotidy..." -ForegroundColor Yellow
 
-# Stop and remove scheduled task
-$existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
-if ($existingTask) {
-    if ($existingTask.State -eq "Running") {
-        Stop-ScheduledTask -TaskName $taskName
-        Write-Host "Stopped scheduled task"
-    }
-    Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
-    Write-Host "Removed scheduled task: $taskName"
-} else {
-    Write-Host "No scheduled task found"
+# Stop any running autotidy process
+$process = Get-Process -Name "autotidy" -ErrorAction SilentlyContinue
+if ($process) {
+    Stop-Process -Name "autotidy" -Force -ErrorAction SilentlyContinue
+    Write-Host "Stopped autotidy process"
+}
+
+# Remove startup shortcut
+if (Test-Path $shortcutPath) {
+    Remove-Item $shortcutPath -Force
+    Write-Host "Removed startup shortcut"
 }
 
 # Remove installation directory
 if (Test-Path $installDir) {
     Remove-Item -Recurse -Force $installDir
     Write-Host "Removed directory: $installDir"
-} else {
-    Write-Host "No installation directory found"
 }
 
 Write-Host ""

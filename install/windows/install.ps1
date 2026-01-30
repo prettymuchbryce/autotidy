@@ -13,7 +13,8 @@ $ErrorActionPreference = "Stop"
 $repo = "prettymuchbryce/autotidy"
 $installDir = "$env:LOCALAPPDATA\autotidy"
 $binPath = "$installDir\autotidy.exe"
-$taskName = "autotidy"
+$startupDir = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
+$shortcutPath = "$startupDir\autotidy.lnk"
 
 Write-Host "Installing autotidy..." -ForegroundColor Green
 
@@ -58,30 +59,33 @@ if ($BinaryPath -ne "") {
     Write-Host "Installed autotidy $version to $binPath"
 }
 
-# Remove existing scheduled task if present
-$existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
-if ($existingTask) {
-    Write-Host "Removing existing scheduled task..."
-    Stop-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
-    Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
+# Stop any running autotidy process
+Get-Process -Name "autotidy" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+
+# Remove existing startup shortcut if present
+if (Test-Path $shortcutPath) {
+    Remove-Item $shortcutPath -Force
 }
 
-# Create scheduled task to run at logon
-$action = New-ScheduledTaskAction -Execute $binPath -Argument "daemon"
-$trigger = New-ScheduledTaskTrigger -AtLogon
-$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+# Create startup shortcut
+$WshShell = New-Object -ComObject WScript.Shell
+$shortcut = $WshShell.CreateShortcut($shortcutPath)
+$shortcut.TargetPath = $binPath
+$shortcut.Arguments = "daemon"
+$shortcut.WorkingDirectory = $installDir
+$shortcut.WindowStyle = 7  # Minimized
+$shortcut.Save()
 
-Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -RunLevel Limited | Out-Null
-Write-Host "Created scheduled task: $taskName"
+Write-Host "Created startup shortcut"
 
 # Start the daemon now
 Write-Host "Starting autotidy daemon..."
-Start-ScheduledTask -TaskName $taskName
+Start-Process -FilePath $binPath -ArgumentList "daemon" -WindowStyle Hidden
 
 Write-Host ""
 Write-Host "Installation complete!" -ForegroundColor Green
 Write-Host ""
 Write-Host "autotidy $version is now running."
 Write-Host ""
-Write-Host "To check status:  autotidy status"
+Write-Host "To check status:  & `"$binPath`" status"
 Write-Host "To view config:   notepad $env:USERPROFILE\.config\autotidy\config.yaml"
