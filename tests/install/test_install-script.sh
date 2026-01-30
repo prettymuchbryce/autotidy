@@ -47,7 +47,7 @@ SERVICE_FILE="$HOME/.config/systemd/user/autotidy.service"
 # Remove any PATH entries from rc files to start clean
 for rc_file in "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.zshrc" "$HOME/.profile"; do
     if [[ -f "$rc_file" ]]; then
-        grep -v '\.local/bin' "$rc_file" > "${rc_file}.tmp" 2>/dev/null || true
+        grep -v '\.local/bin' "$rc_file" >"${rc_file}.tmp" 2>/dev/null || true
         mv "${rc_file}.tmp" "$rc_file" 2>/dev/null || true
     fi
 done
@@ -72,14 +72,14 @@ fi
 info "  Systemd service created"
 
 # Verify service is running
-if ! systemctl --user is-active autotidy > /dev/null 2>&1; then
+if ! systemctl --user is-active autotidy >/dev/null 2>&1; then
     systemctl --user status autotidy || true
     error "Service is not running"
 fi
 info "  Service is running"
 
 # Verify binary works
-if ! "$INSTALLED_BINARY" --help > /dev/null 2>&1; then
+if ! "$INSTALLED_BINARY" --help >/dev/null 2>&1; then
     error "Installed binary doesn't work"
 fi
 info "  Binary is functional"
@@ -136,7 +136,7 @@ if [[ -f "$SERVICE_FILE" ]]; then
 fi
 info "  Service file removed"
 
-if systemctl --user is-active autotidy > /dev/null 2>&1; then
+if systemctl --user is-active autotidy >/dev/null 2>&1; then
     error "Service is still running"
 fi
 info "  Service stopped"
@@ -152,7 +152,7 @@ if [[ ! -x "$INSTALLED_BINARY" ]]; then
     error "Binary not installed after reinstall"
 fi
 
-if ! systemctl --user is-active autotidy > /dev/null 2>&1; then
+if ! systemctl --user is-active autotidy >/dev/null 2>&1; then
     error "Service not running after reinstall"
 fi
 info "  Reinstall successful"
@@ -165,6 +165,16 @@ info "Test 5: Shell-specific PATH detection"
 # Uninstall first
 "$UNINSTALL_SCRIPT"
 
+# The install script only adds PATH to rc files if ~/.local/bin is NOT already
+# in $PATH. On many CI systems, it's already in PATH, so we need to test with
+# PATH modified to not include it.
+
+# Save original PATH
+ORIGINAL_PATH="$PATH"
+
+# Remove ~/.local/bin from PATH for this test
+CLEAN_PATH=$(echo "$PATH" | tr ':' '\n' | grep -v '\.local/bin' | tr '\n' ':' | sed 's/:$//')
+
 # Test each available shell
 for shell_name in bash zsh fish; do
     shell_path=$(command -v "$shell_name" 2>/dev/null || true)
@@ -175,15 +185,15 @@ for shell_name in bash zsh fish; do
 
     # Determine rc file for this shell
     case "$shell_name" in
-        bash)
-            rc_file="$HOME/.bashrc"
-            ;;
-        zsh)
-            rc_file="$HOME/.zshrc"
-            ;;
-        fish)
-            rc_file="$HOME/.config/fish/config.fish"
-            ;;
+    bash)
+        rc_file="$HOME/.bashrc"
+        ;;
+    zsh)
+        rc_file="$HOME/.zshrc"
+        ;;
+    fish)
+        rc_file="$HOME/.config/fish/config.fish"
+        ;;
     esac
 
     # Create empty rc file if it doesn't exist
@@ -191,11 +201,11 @@ for shell_name in bash zsh fish; do
     touch "$rc_file"
 
     # Remove any existing .local/bin entries
-    grep -v '\.local/bin' "$rc_file" > "${rc_file}.tmp" 2>/dev/null || true
+    grep -v '\.local/bin' "$rc_file" >"${rc_file}.tmp" 2>/dev/null || true
     mv "${rc_file}.tmp" "$rc_file"
 
-    # Run install with this shell
-    SHELL="$shell_path" "$INSTALL_SCRIPT" "$BINARY_PATH" >/dev/null 2>&1
+    # Run install with this shell and cleaned PATH
+    PATH="$CLEAN_PATH" SHELL="$shell_path" "$INSTALL_SCRIPT" "$BINARY_PATH" >/dev/null 2>&1
 
     # Check if PATH was added
     if grep -q '\.local/bin\|fish_add_path' "$rc_file" 2>/dev/null; then
@@ -207,6 +217,9 @@ for shell_name in bash zsh fish; do
     # Uninstall for next iteration
     "$UNINSTALL_SCRIPT" >/dev/null 2>&1
 done
+
+# Restore original PATH
+export PATH="$ORIGINAL_PATH"
 
 # ============================================================================
 # Cleanup
