@@ -89,4 +89,3 @@ Write-Host "autotidy $version is now running."
 Write-Host ""
 Write-Host "To check status:  & `"$binPath`" status"
 Write-Host "To view config:   notepad $env:APPDATA\autotidy\config.yaml"
-
