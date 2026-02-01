@@ -6,7 +6,7 @@ Logs a message when a file matches. Useful for debugging rules and testing confi
 
 ```yaml
 # Simple form - just the message
-- log: "Found file: ${name}.${ext}"
+- log: "Found file: ${name}${ext}"
 
 # Explicit form with level
 - log:
@@ -34,7 +34,7 @@ Logs a message when a file matches. Useful for debugging rules and testing confi
 
 ### Simple logging
 ```yaml
-- log: "Matched: ${name}.${ext}"
+- log: "Matched: ${name}${ext}"
 ```
 
 ### Debug logging
@@ -47,7 +47,7 @@ Logs a message when a file matches. Useful for debugging rules and testing confi
 ### Log before action
 ```yaml
 actions:
-  - log: "Moving ${name}.${ext} to archive"
+  - log: "Moving ${name}${ext} to archive"
   - move: ~/Archive
 ```
 
@@ -59,7 +59,7 @@ rules:
     filters:
       - extension: [jpg, png, gif]
     actions:
-      - log: "Would process image: ${name}.${ext}"
+      - log: "Would process image: ${name}${ext}"
       # Comment out actual action while testing
       # - move: ~/Pictures
 ```
@@ -74,7 +74,7 @@ rules:
           gt: 1GB
     actions:
       - log:
-          msg: "Large file detected: ${name}.${ext}"
+          msg: "Large file detected: ${name}${ext}"
           level: warn
 ```
 
@@ -83,7 +83,7 @@ rules:
 The `msg` field supports all template variables:
 
 ```yaml
-- log: "File: ${name}.${ext}, Year: ${year}, Month: ${month}"
+- log: "File: ${name}${ext}, Year: %Y, Month: %m"
 ```
 
 See [Templates](../templates.md) for all available variables.

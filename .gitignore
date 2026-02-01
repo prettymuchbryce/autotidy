@@ -38,3 +38,6 @@ __debug_bin*
 # Local config (if any)
 *.local.yaml
 *.local.yml
+
+# mdBook build output (built by CI)
+docs/book/

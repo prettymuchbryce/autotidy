@@ -32,7 +32,7 @@ Actions execute in order. This allows chaining operations:
 
 ```yaml
 actions:
-  - copy: "${name}_backup.${ext}"  # First, create a backup copy
+  - copy: "${name}_backup${ext}"   # First, create a backup copy
   - move: ~/Documents              # Then, move the original
   - log: "Processed ${name}"
 ```
@@ -44,13 +44,13 @@ Most actions support template variables in paths and messages:
 | variable | description |
 |----------|-------------|
 | `${name}` | Filename without extension |
-| `${ext}` | File extension (without dot) |
-| `${year}` | Current year (4 digits) |
-| `${month}` | Current month (01-12) |
-| `${day}` | Current day (01-31) |
-| `${hour}` | Current hour (00-23) |
-| `${minute}` | Current minute (00-59) |
-| `${second}` | Current second (00-59) |
+| `${ext}` | File extension (with dot) |
+| `%Y` | Current year (4 digits) |
+| `%m` | Current month (01-12) |
+| `%d` | Current day (01-31) |
+| `%H` | Current hour (00-23) |
+| `%M` | Current minute (00-59) |
+| `%S` | Current second (00-59) |
 
 See [Templates](../templates.md) for full details.
 

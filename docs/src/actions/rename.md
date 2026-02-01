@@ -6,11 +6,11 @@ Renames files in place.
 
 ```yaml
 # Simple form - new name with template
-- rename: "${name}_archived.${ext}"
+- rename: "${name}_archived${ext}"
 
 # Explicit form with options
 - rename:
-    new_name: "${name}_${year}${month}${day}.${ext}"
+    new_name: "${name}_%Y%m%d${ext}"
     on_conflict: rename_with_suffix
 ```
 
@@ -33,23 +33,23 @@ Renames files in place.
 
 ### Add date suffix
 ```yaml
-- rename: "${name}_${year}${month}${day}.${ext}"
+- rename: "${name}_%Y%m%d${ext}"
 ```
 
-### Lowercase extension
+### Preserve original name
 ```yaml
-- rename: "${name}.${ext}"
+- rename: "${name}${ext}"
 ```
 
 ### Add prefix
 ```yaml
-- rename: "archived_${name}.${ext}"
+- rename: "archived_${name}${ext}"
 ```
 
 ### Rename with skip on conflict
 ```yaml
 - rename:
-    new_name: "processed_${name}.${ext}"
+    new_name: "processed_${name}${ext}"
     on_conflict: skip
 ```
 
@@ -61,23 +61,23 @@ rules:
     filters:
       - name: "Screen Shot*"
     actions:
-      - rename: "screenshot_${year}${month}${day}_${hour}${minute}${second}.${ext}"
+      - rename: "screenshot_%Y%m%d_%H%M%S${ext}"
 ```
 
 ## Template variables
 
-The `new_name` field supports all template variables:
+The `new_name` field supports template variables:
 
-| variable | example output |
-|----------|----------------|
-| `${name}` | `document` |
-| `${ext}` | `pdf` |
-| `${year}` | `2024` |
-| `${month}` | `03` |
-| `${day}` | `15` |
-| `${hour}` | `14` |
-| `${minute}` | `30` |
-| `${second}` | `45` |
+| variable | description | example |
+|----------|-------------|---------|
+| `${name}` | Filename without extension | `document` |
+| `${ext}` | File extension (with dot) | `.pdf` |
+| `%Y` | Year (4 digits) | `2024` |
+| `%m` | Month (01-12) | `03` |
+| `%d` | Day (01-31) | `15` |
+| `%H` | Hour (00-23) | `14` |
+| `%M` | Minute (00-59) | `30` |
+| `%S` | Second (00-59) | `45` |
 
 See [Templates](../templates.md) for full details.
 

@@ -7,8 +7,8 @@ Templates allow you to use dynamic values in action parameters like destination 
 Template variables use the `${variable}` syntax:
 
 ```yaml
-- move: ~/Archive/${year}/${month}
-- rename: "${name}_backup.${ext}"
+- move: ~/Archive/%Y/%m
+- rename: "${name}_backup${ext}"
 ```
 
 ## File variables
@@ -16,7 +16,7 @@ Template variables use the `${variable}` syntax:
 | variable | description | example |
 |----------|-------------|---------|
 | `${name}` | Filename without extension | `document` |
-| `${ext}` | File extension (without dot) | `pdf` |
+| `${ext}` | File extension (with dot) | `.pdf` |
 
 ### Examples
 
@@ -25,10 +25,10 @@ For a file named `report.pdf`:
 | template | result |
 |----------|--------|
 | `${name}` | `report` |
-| `${ext}` | `pdf` |
-| `${name}.${ext}` | `report.pdf` |
-| `${name}_copy.${ext}` | `report_copy.pdf` |
-| `backup_${name}.${ext}` | `backup_report.pdf` |
+| `${ext}` | `.pdf` |
+| `${name}${ext}` | `report.pdf` |
+| `${name}_copy${ext}` | `report_copy.pdf` |
+| `backup_${name}${ext}` | `backup_report.pdf` |
 
 ## Time variables
 
@@ -89,7 +89,7 @@ rules:
     filters:
       - extension: pdf
     actions:
-      - rename: "${name}_%Y%m%d.${ext}"
+      - rename: "${name}_%Y%m%d${ext}"
 ```
 
 `report.pdf` becomes `report_20240315.pdf`.
@@ -101,7 +101,7 @@ rules:
   - name: Daily Backup
     locations: ~/Documents
     actions:
-      - copy: "${name}_%Y%m%d.${ext}"
+      - copy: "${name}_%Y%m%d${ext}"
 ```
 
 Creates a timestamped copy of each file in the same directory.
@@ -141,7 +141,7 @@ rules:
   - name: Rename Duplicates
     locations: ~/Downloads
     actions:
-      - rename: "${name}_%Y%m%d_%H%M%S.${ext}"
+      - rename: "${name}_%Y%m%d_%H%M%S${ext}"
 ```
 
 ## Combining variables
@@ -150,8 +150,8 @@ Mix file and time variables:
 
 ```yaml
 - move: ~/Archive/%Y/${name}/%m
-- rename: "${name}_%Y%m%d_%H%M%S.${ext}"
-- copy: "${name}_backup_%Y%m%d.${ext}"
+- rename: "${name}_%Y%m%d_%H%M%S${ext}"
+- copy: "${name}_backup_%Y%m%d${ext}"
 ```
 
 ## Where templates work

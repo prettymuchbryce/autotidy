@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="icon.png" alt="autotidy" width="128" height="128">
+  <img src="icon.png" alt="autotidy" width="256">
 </p>
 
 <p align="center">Automatically organize files using declarative rules</p>

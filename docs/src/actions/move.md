@@ -45,7 +45,7 @@ Moves files to a specified destination directory.
 
 ### Organize by date
 ```yaml
-- move: ~/Photos/${year}/${month}
+- move: ~/Photos/%Y/%m
 ```
 
 ### Move to categorized folders
@@ -71,7 +71,7 @@ rules:
 The destination directory supports template variables:
 
 ```yaml
-- move: ~/Archive/${year}/${month}
+- move: ~/Archive/%Y/%m
 ```
 
 See [Templates](../templates.md) for all available variables.

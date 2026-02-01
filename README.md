@@ -1,11 +1,7 @@
 # autotidy
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/icon-dark-128.png">
-    <source media="(prefers-color-scheme: light)" srcset="assets/icon-light-128.png">
-    <img src="assets/icon-light-128.png" alt="autotidy" width="128" height="128">
-  </picture>
+  <img src="assets/icon-512.png" alt="autotidy" width="256">
 </p>
 <p align="center">
   Automatically organize files using declarative rules
@@ -21,28 +17,73 @@
 
 ## About
 
-**autotidy** consists of both a background process (daemon) and a CLI tool. It allows you to write declarative rules that are applied automatically when files in a directory change. Rules are defined in a YAML file. Rules specify the directories that should be watched for changes and the actions that should be performed when files in those directories change. Actions include moving, copying, renaming, and deleting files. Additionally, filters can be applied to target only files that meet certain criteria, such as a particular name, extension, MIME type, or size.
+autotidy is a cross-platform file organization daemon. Define rules in YAML, and it watches your folders for changes, moving, renaming, or organizing files as they appear.
 
-autotidy aims to be cross-platform, though Windows support is currently experimental.
+- **Automatic** - Runs in the background, watching directories. Triggers your rules when contents change.
+- **Declarative** - Define your rules in YAML. No code required.
+- **Filters** - Match files by name, extension, size, date, MIME type, file type.
+- **Actions** - Move, copy, rename, delete, and trash files that pass your filters.
+- **Standalone** - Standalone compiled binary. No runtime dependencies.
+- **Dry-run** - Preview what your config _would_ do before running it with `autotidy run`.
+- **Cross-platform** - Linux, macOS, Windows (experimental)
+- **Open source** - MIT licensed
 
-## Configuration example
+## Examples
 
-Rules are defined in a `config.yaml` file. The below configuration contains an example rule which organizes the `~/Downloads` directory.
+Below are some example rules. Rules are defined in a `config.yaml` file.
 
 ```yaml
-# config.yaml
+# Organize downloads by extension
 rules:
-  - name: Organize Downloaded Images
-    locations: ~/Downloads
-    filters:
-      - mime_type: "image/*"
-    actions:
-      - move: ~/Pictures/Downloads
+ - name: Organize Downloads
+   locations: ~/Downloads
+   filters:
+     - extension: [pdf, doc, docx]
+   actions:
+     - move: ~/Documents
 ```
 
-When the contents of the `~/Downloads` directory change, image files in this directory will be moved to `~/Pictures/Downloads`.
+```yaml
+# Sort images by date taken
+rules:
+ - name: Sort Photos
+   locations: ~/Downloads
+   recursive: true
+   filters:
+     - extension: [jpg, jpeg, png, heic]
+   actions:
+     - move: ~/Pictures/%Y/%B  # e.g., ~/Pictures/2024/January
+```
 
-You can find an exhaustive list of configuration options along with more examples [here](https://prettymuchbryce.github.io/autotidy/configuration.html).
+```yaml
+# Trash old Downloads
+rules:
+ - name: Trash old downloads
+   locations: ~/Downloads
+   filters:
+     - date_created:
+         before:
+           days_ago: 90
+   actions:
+     - trash
+```
+
+```yaml
+# Backup images or videos (OR logic with any:)
+# Copy the file, then move the copy to the backups directory
+rules:
+ - name: Backup Media
+   locations: ~/Downloads
+   filters:
+     - any:
+         - mime_type: "image/*"
+         - mime_type: "video/*"
+   actions:
+     - copy: "${name}_backup${ext}"
+     - move: ~/backups
+```
+
+You can find an exhaustive list of configuration options [here](https://prettymuchbryce.github.io/autotidy/configuration.html).
 
 ## Quick start
 
@@ -66,7 +107,19 @@ autotidy status
 }
 ```
 
-Additional installation options can be found [here](https://prettymuchbryce.github.io/autotidy/installation/).
+### Linux
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/prettymuchbryce/autotidy/master/install/linux/install.sh | sh
+```
+
+### Windows
+
+```powershell
+irm https://raw.githubusercontent.com/prettymuchbryce/autotidy/master/install/windows/install.ps1 | iex
+```
+
+Additional installation information can be found [here](https://prettymuchbryce.github.io/autotidy/installation/).
 
 ## Configuration path
 
@@ -81,7 +134,6 @@ By default, rules are defined in the following locations:
 The [default rule file](internal/config/config-example.yaml) contains no enabled rules, but does include some commented-out examples.
 
 ## CLI Usage
-
 
 ```sh
 autotidy status      Print status information

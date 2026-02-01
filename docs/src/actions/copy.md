@@ -9,11 +9,11 @@ Copies a file to a new name in the same directory.
 - copy: backup.txt
 
 # With template
-- copy: "${name}_backup.${ext}"
+- copy: "${name}_backup${ext}"
 
 # With conflict handling
 - copy:
-    new_name: "${name}_backup.${ext}"
+    new_name: "${name}_backup${ext}"
     on_conflict: overwrite
 ```
 
@@ -41,18 +41,18 @@ Copies a file to a new name in the same directory.
 
 ### Copy with original name preserved
 ```yaml
-- copy: "${name}_copy.${ext}"
+- copy: "${name}_copy${ext}"
 ```
 
 ### Copy with timestamp
 ```yaml
-- copy: "${name}_${year}${month}${day}.${ext}"
+- copy: "${name}_%Y%m%d${ext}"
 ```
 
 ### Backup with overwrite
 ```yaml
 - copy:
-    new_name: "${name}_backup.${ext}"
+    new_name: "${name}_backup${ext}"
     on_conflict: overwrite
 ```
 
@@ -61,7 +61,7 @@ Copies a file to a new name in the same directory.
 The `new_name` field supports template variables:
 
 ```yaml
-- copy: "${name}_${hour}${minute}.${ext}"
+- copy: "${name}_%H%M${ext}"
 ```
 
 See [Templates](../templates.md) for all available variables.
