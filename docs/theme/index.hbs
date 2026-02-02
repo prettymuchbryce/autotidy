@@ -309,6 +309,12 @@
         <script src="{{ resource "searcher.js" }}"></script>
         {{/if}}
 
+        <!-- Hidden theme elements to prevent JS error (theme picker removed) -->
+        <button id="mdbook-theme-toggle" class="hidden" style="display:none;"></button>
+        <div id="mdbook-theme-list" class="hidden" style="display:none;">
+            <button id="mdbook-theme-latte" class="theme">latte</button>
+        </div>
+
         <script src="{{ resource "clipboard.min.js" }}"></script>
         <script src="{{ resource "highlight.js" }}"></script>
         <script src="{{ resource "book.js" }}"></script>

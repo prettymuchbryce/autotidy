@@ -14,3 +14,4 @@ no-section-label = true
 sidebar-header-nav = false
 additional-css = ["./theme/catppuccin.css"]
 default-theme = "latte"
+preferred-dark-theme = "latte"
