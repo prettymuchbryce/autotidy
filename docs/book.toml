@@ -12,3 +12,5 @@ git-repository-url = "https://github.com/prettymuchbryce/autotidy"
 edit-url-template = "https://github.com/prettymuchbryce/autotidy/edit/master/docs/{path}"
 no-section-label = true
 sidebar-header-nav = false
+additional-css = ["./theme/catppuccin.css"]
+default-theme = "latte"

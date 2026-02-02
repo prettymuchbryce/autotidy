@@ -158,3 +158,5 @@ Full documentation is available [here](https://prettymuchbryce.github.io/autotid
 ## Inspired By
 
 autotidy was inspired by tools like [Hazel](https://www.noodlesoft.com/), [Maid](https://github.com/maid/maid), and [organize](https://github.com/tfeldmann/organize).
+
+autotidy logo designed by [Aaron Ng](https://x.com/localghost)
